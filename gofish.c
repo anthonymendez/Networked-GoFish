@@ -2,23 +2,6 @@
 #include <time.h>
 #include "gofish.h"
 
-/*int main(int args, char* argv[]) {
-    srand(time(NULL));
-
-    do {
-        game_start();
-        do {
-            /* Play a round 
-            if(game_loop())
-                break; /* If there is a winner, go to game_end
-            current = next_player;
-        } while(1);
-    } while(game_end());
-    fprintf(stdout, "Exiting\n");
-    return 0;
-}
-*/
-
 /*
  * Function: game_start
  * --------------------
@@ -27,20 +10,28 @@
  * deals cards to each player, and sets the human player 
  * as the current player.
  */
-void game_start() {
+void game_start(int connfd) {
     reset_player(&user);
     reset_player(&computer);
 
-    fprintf(stdout, "Shuffling deck...\n");
+    sendStringToClient(connfd, "Shuffling deck...\n");
     shuffle();
     deal_player_cards(&user);
     deal_player_cards(&computer);
 
     /* It is possible to be dealt, at most, one book */
-    if(user.book[0] != 0)
-        fprintf(stdout, "Player 1 books %s", pR(user.book[0]));
-    if(computer.book[0] != 0)
-        fprintf(stdout, "Player 2 books %s", pR(computer.book[0]));
+    if(user.book[0] != 0) {
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 1 books %s", pR(user.book[0]));
+        sendStringToClient(connfd, buf);
+        free(buf);
+    }
+    if(computer.book[0] != 0) {
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 2 books %s", pR(computer.book[0]));
+        sendStringToClient(connfd, buf);
+        free(buf);
+    }
 
     current = &user;
     next_player = &computer;
@@ -54,16 +45,16 @@ void game_start() {
  * 
  * Return: 1 if there is a winner, 0 otherwise
  */
-int game_loop() {
-    fprintf(stdout, "\n");
+int game_loop(int connfd) {
+    sendStringToClient(connfd, "\n");
 
     /* Print hand and book statuses */
-    fprintf(stdout, "Player 1's Hand - ");
-    print_hand(&user);
-    fprintf(stdout, "Player 1's Book - ");
-    print_book(&user);
-    fprintf(stdout, "Player 2's Book - ");
-    print_book(&computer);
+    sendStringToClient(connfd, "Player 1's Hand - ");
+    print_hand(connfd, &user);
+    sendStringToClient(connfd, "Player 1's Book - ");
+    print_book(connfd, &user);
+    sendStringToClient(connfd, "Player 2's Book - ");
+    print_book(connfd, &computer);
 
     struct player* other_player = (current == &user) ? &computer : &user;
 
@@ -83,29 +74,41 @@ int game_loop() {
     if(current->hand_size > 0) { /* Non-empty hand */
         /* Get rank guess input */
         if(current == &user) { /* User's turn */
-            r = user_play(current);
+            r = user_play(connfd, current);
         } else { /* Computer's turn */
-            r = computer_play(current);
+            r = computer_play(connfd, current);
         }
     } else /* Empty hand */
         r = 'X'; /* Invalid rank, so search will always fail and the player will Go Fish */
 
     /* Handle input */
     if(search(other_player, r) == 0) { /* Go Fish */
-        if(r != 'X') /* Non-empty hand */
-            fprintf(stdout, "    - Player %d has no %s's\n", ((current == &user) ? 2 : 1), pR(r));
-
+        if(r != 'X') { /* Non-empty hand */
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d has no %s's\n", ((current == &user) ? 2 : 1), pR(r));
+            sendStringToClient(connfd, buf);
+            free(buf);
+        }
         struct card* fished_card = next_card();
         int next_book_i = 0;
         if (fished_card != NULL) {
-            if(current == &user)
-                fprintf(stdout, "    - Go Fish, Player 1 draws %s%c\n", pR(fished_card->rank), fished_card->suit);
-            else {
+            if(current == &user) {
+                char *buf = malloc(100 * sizeof(char));
+                sprintf(buf, "    - Go Fish, Player 1 draws %s%c\n", pR(fished_card->rank), fished_card->suit);
+                sendStringToClient(connfd, buf);
+                free(buf);
+            } else {
                 if (fished_card->rank == r) {
-                    fprintf(stdout, "    - Go Fish, Player 2 draws %s%c\n", pR(fished_card->rank), fished_card->suit);
+                    char *buf = malloc(100 * sizeof(char));
+                    sprintf(buf, "    - Go Fish, Player 2 draws %s%c\n", pR(fished_card->rank), fished_card->suit);
+                    sendStringToClient(connfd, buf);
+                    free(buf);
                 }
                 else {
-                    fprintf(stdout, "    - Go Fish, Player 2 draws a card\n");
+                    char *buf = malloc(100 * sizeof(char));
+                    sprintf(buf, "    - Go Fish, Player 2 draws a card\n");
+                    sendStringToClient(connfd, buf);
+                    free(buf);
                 }
             }
 
@@ -113,8 +116,12 @@ int game_loop() {
                 next_book_i++;
             }
             add_card(current, fished_card);
-            if(current->book[next_book_i] != 0)
-                fprintf(stdout, "    - Player %d books %s\n", ((current == &user) ? 1 : 2), pR(fished_card->rank));
+            if(current->book[next_book_i] != 0) {
+                char *buf = malloc(100 * sizeof(char));
+                sprintf(buf, "    - Player %d books %s\n", ((current == &user) ? 1 : 2), pR(fished_card->rank));
+                sendStringToClient(connfd, buf);
+                free(buf);
+            }
         }
         /* If a book was added or the asked rank was drawn, play again */
         if(fished_card != NULL && (
@@ -122,10 +129,16 @@ int game_loop() {
             fished_card->rank == r)
           ) {
             next_player = current;
-            fprintf(stdout, "    - Player %d gets another turn\n", ((current == &user) ? 1 : 2));
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d gets another turn\n", ((current == &user) ? 1 : 2));
+            sendStringToClient(connfd, buf);
+            free(buf);
         } else { /* Otherwise, switch players' turns */
             next_player = other_player;
-            fprintf(stdout, "    - Player %d's turn\n", ((next_player == &user) ? 1 : 2));
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d's turn\n", ((next_player == &user) ? 1 : 2));
+            sendStringToClient(connfd, buf);
+            free(buf);
         }
     } else { /* Transfer cards, play again */
         /* Print the cards of the guessed rank that each player has */
@@ -136,20 +149,33 @@ int game_loop() {
                 print_player = (current == &user) ? &computer : &user; /* Switch to other player */
                 continue;
             }
-            fprintf(stdout, "    - Player %d has ", ((print_player == &user) ? 1 : 2));
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d has ", ((print_player == &user) ? 1 : 2));
+            sendStringToClient(connfd, buf);
+            free(buf);
             int j;
             struct hand* h = print_player->card_list;
             int rank_count = 0;
             for(j = 0; j < print_player->hand_size && h != NULL; j++) {
                 if(h->top.rank == r) {
-                    if(rank_count++ > 0)
-                        fprintf(stdout, ", ");
-                    fprintf(stdout, "%s%c", pR(r), h->top.suit);
+                    if(rank_count++ > 0) {
+                        buf = malloc(100 * sizeof(char));
+                        sprintf(buf, ", ");
+                        sendStringToClient(connfd, buf);
+                        free(buf);
+                    }
+                    buf = malloc(100 * sizeof(char));
+                    sprintf(buf, "%s%c", pR(r), h->top.suit);
+                    sendStringToClient(connfd, buf);
+                    free(buf);
                 }
 
                 h = h->next;
             }
-            fprintf(stdout, "\n");
+            buf = malloc(100 * sizeof(char));
+            sprintf(buf, "\n");
+            sendStringToClient(connfd, buf);
+            free(buf);
             print_player = (current == &user) ? &computer : &user; /* Switch to other player */
         }
 
@@ -158,16 +184,26 @@ int game_loop() {
             next_book_i++;
         }
         transfer_cards(other_player, current, r);
-        if(current->book[next_book_i] != 0)
-            fprintf(stdout, "    - Player %d books %s\n", ((current == &user) ? 1 : 2), pR(r));
+        if(current->book[next_book_i] != 0) {
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d books %s\n", ((current == &user) ? 1 : 2), pR(r));
+            sendStringToClient(connfd, buf);
+            free(buf);
+        }
 
         /* If a book was added, play again */
         if(current->book[next_book_i] != 0) {
             next_player = current;
-            fprintf(stdout, "    - Player %d gets another turn\n", ((current == &user) ? 1 : 2));
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d gets another turn\n", ((current == &user) ? 1 : 2));
+            sendStringToClient(connfd, buf);
+            free(buf);
         } else { /* Otherwise, switch players' turns */
             next_player = other_player;
-            fprintf(stdout, "    - Player %d's turn\n", ((next_player == &user) ? 1 : 2));
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "    - Player %d's turn\n", ((next_player == &user) ? 1 : 2));
+            sendStringToClient(connfd, buf);
+            free(buf);
         }
     }
     return 0;
@@ -185,7 +221,7 @@ int game_loop() {
  * 
  * Return: 1 to play again, 0 to exit
  */
-int game_end() {
+int game_end(int connfd) {
     struct player* other_player = (current == &user) ? &computer : &user;
     
     /* Count books of loser */
@@ -194,18 +230,32 @@ int game_end() {
         count++;
     }
     if(current == &user) { /* User won :D */
-        fprintf(stdout, "Player 1 Wins! 7-%d\n", count);
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 1 Wins! 7-%d\n", count);
+        sendStringToClient(connfd, buf);
+        free(buf);
     } else {
-        fprintf(stdout, "Player 2 Wins! 7-%d\n", count);
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 2 Wins! 7-%d\n", count);
+        sendStringToClient(connfd, buf);
+        free(buf);
     }
 
     char yn[3] = "";
     int tryAgain = 0;
     do {
         if(tryAgain) {
-            fprintf(stdout, "Error - must enter \"Y\" or \"N\"");
+            char *buf = malloc(100 * sizeof(char));
+            sprintf(buf, "Error - must enter \"Y\" or \"N\"");
+            sendStringToClient(connfd, buf);
+            free(buf);
         }
-        fprintf(stdout, "\nDo you want to play again [Y/N]: ");
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "\nDo you want to play again [Y/N]: ");
+        sendStringToClient(connfd, buf);
+        free(buf);
+        /* TODO: Replace with wait to listen from client */
+        sendStringToClient(connfd, DO_NOT_PRINT);
         scanf("%2s", yn);
         tryAgain = 1;
 
@@ -258,22 +308,34 @@ const char* pR(char r) {
  * 
  * target: the player to print the hand of
  */
-void print_hand(struct player* target) {
+void print_hand(int connfd, struct player* target) {
     if(target->hand_size == 0) {
-        fprintf(stdout, "\n");
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "\n");
+        sendStringToClient(connfd, buf);
+        free(buf);
         return;
     }
 
     struct hand* h = target->card_list;
-    fprintf(stdout, "%s%c", pR(h->top.rank), h->top.suit);
+    char *buf = malloc(100 * sizeof(char));
+    sprintf(buf, "%s%c", pR(h->top.rank), h->top.suit);
+    sendStringToClient(connfd, buf);
+    free(buf);
 
     int i;
     for(i = 1; i < target->hand_size; i++) {
         h = h->next;
-        fprintf(stdout, " %s%c", pR(h->top.rank), h->top.suit);
+        buf = malloc(100 * sizeof(char));
+        sprintf(buf, "%s%c", pR(h->top.rank), h->top.suit);
+        sendStringToClient(connfd, buf);
+        free(buf);
     }
 
-    fprintf(stdout, "\n");
+    buf = malloc(100 * sizeof(char));
+    sprintf(buf, "\n");
+    sendStringToClient(connfd, buf);
+    free(buf);
 }
 
 /*
@@ -286,18 +348,30 @@ void print_hand(struct player* target) {
  * 
  * target: the player to print the book of
  */
-void print_book(struct player* target) {
+void print_book(int connfd, struct player* target) {
     if(target == NULL || target->book == NULL || target->book[0] == '\0' || target->book[0] == 0) {
-        fprintf(stdout, "\n");
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "\n");
+        sendStringToClient(connfd, buf);
+        free(buf);
         return;
     }
 
-    fprintf(stdout, "%s", pR(target->book[0]));
+    char *buf = malloc(100 * sizeof(char));
+    sprintf(buf, "%s", pR(target->book[0]));
+    sendStringToClient(connfd, buf);
+    free(buf);
 
     int i = 1;
     while(i < 7 && target->book[i] != '\0' && target->book[i] != 0) {
-        fprintf(stdout, " %s", pR(target->book[i++]));
+        buf = malloc(100 * sizeof(char));
+        sprintf(buf, " %s", pR(target->book[i++]));
+        sendStringToClient(connfd, buf);
+        free(buf);
     }
 
-    fprintf(stdout, "\n");
+    buf = malloc(100 * sizeof(char));
+    sprintf(buf, "\n");
+    sendStringToClient(connfd, buf);
+    free(buf);
 }

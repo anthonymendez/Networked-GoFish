@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "player.h"
 #include "deck.h"
+#include "server.h"
 
 /*
    Define any prototype functions 
@@ -18,7 +19,7 @@
  * deals cards to each player, and sets the human player 
  * as the current player.
  */
-void game_start();
+void game_start(int connfd);
 
 /*
  * Function: game_loop
@@ -28,7 +29,7 @@ void game_start();
  * 
  * Return: 1 if there is a winner, 0 otherwise
  */
-int game_loop();
+int game_loop(int connfd);
 
 /*
  * Function: game_end
@@ -42,7 +43,7 @@ int game_loop();
  * 
  * Return: 1 to play again, 0 to exit
  */
-int game_end();
+int game_end(int connfd);
 
 /*
  * Function: pR
@@ -70,7 +71,7 @@ const char* pR(char r);
  * 
  * target: the player to print the hand of
  */
-void print_hand(struct player* target);
+void print_hand(int connfd, struct player* target);
 
 /*
  * Function: print_book
@@ -82,7 +83,7 @@ void print_hand(struct player* target);
  * 
  * target: the player to print the book of
  */
-void print_book(struct player* target);
+void print_book(int connfd, struct player* target);
 
 /*
  * Instance Variables: current, next_player

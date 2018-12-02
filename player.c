@@ -309,7 +309,7 @@ int reset_player(struct player* target) {
  * 
  * Rank: return a valid selected rank
  */
-char computer_play(struct player* target) {
+char computer_play(int connfd, struct player* target) {
     int i;
     int randIndex = rand() % target->hand_size;
     struct hand* current_hand = target->card_list;
@@ -317,11 +317,17 @@ char computer_play(struct player* target) {
         current_hand = current_hand->next;
     }
 
-    if(current_hand->top.rank == 'T')
-        fprintf(stdout, "Player 2's turn, enter a Rank: 10\n");
-    else
-        fprintf(stdout, "Player 2's turn, enter a Rank: %c\n", current_hand->top.rank);
-
+    if(current_hand->top.rank == 'T') {
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 2's turn, enter a Rank: 10\n");
+        sendStringToClient(connfd, buf);
+        free(buf);
+    } else {
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 2's turn, enter a Rank: %c\n", current_hand->top.rank);
+        sendStringToClient(connfd, buf);
+        free(buf);
+    }
     return current_hand->top.rank;
 }
 
@@ -338,29 +344,40 @@ char computer_play(struct player* target) {
  * 
  * returns: return a valid selected rank
  */
-char user_play(struct player* target) {
+char user_play(int connfd, struct player* target) {
     char rank;
     do {
-        fprintf(stdout, "Player 1's turn, enter a Rank: ");
-        char buf[4] = "";
-        scanf("%3s", buf); /* If {Enter} is pressed before other input, this still blocks. I believe this is fine. */
+        char *buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Player 1's turn, enter a Rank: ");
+        sendStringToClient(connfd, buf);
+        free(buf);
+        /* TODO: Change to stdin to listening from client */
+        sendStringToClient(connfd, DO_NOT_PRINT);
+        char buf2[4] = "";
+        scanf("%3s", buf2); /* If {Enter} is pressed before other input, this still blocks. I believe this is fine. */
         while(getchar() != '\n'); /* Clear anything after the 3rd character from stdin */
 
         /* Check for a "10" */
-        if(buf[0] == '1' && buf[1] == '0' && buf[2] == '\0')
+        if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0')
             rank = 'T';
-        else if(buf[1] == '\0')
-            rank = buf[0];
+        else if(buf2[1] == '\0')
+            rank = buf2[0];
         else { /* Invalid input length */
-            fprintf(stdout, "Error - must have at least one card from rank to play\n");
+            buf = malloc(100 * sizeof(char));
+            sprintf(buf, "Error - must have at least one card from rank to play\n");
+            sendStringToClient(connfd, buf);
+            free(buf);
             continue;
         }
 
         /* If the selected rank is in the player's hand, return it */
-        if(search(target, rank) && buf[0] != 'T') /* Input 'T' improperly results in a successful search */
+        if(search(target, rank) && buf2[0] != 'T') /* Input 'T' improperly results in a successful search */
             break;
 
-        fprintf(stdout, "Error - must have at least one card from rank to play\n");
+        buf = malloc(100 * sizeof(char));
+        sprintf(buf, "Error - must have at least one card from rank to play\n");
+        sendStringToClient(connfd, buf);
+        free(buf);
     }while(1);
 
     return rank;

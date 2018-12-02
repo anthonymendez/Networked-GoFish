@@ -3,6 +3,9 @@
 
 #include <stdlib.h>
 #include "card.h"
+#include "server.h"
+
+#define DO_NOT_PRINT "DO_NOT_PRINT"
 
 /*
  * Structure: player
@@ -127,7 +130,7 @@ int reset_player(struct player* target);
  * 
  * Rank: return a valid selected rank
  */
-char computer_play(struct player* target);
+char computer_play(int connfd, struct player* target);
 
 /*
  * Function: user_play
@@ -142,6 +145,6 @@ char computer_play(struct player* target);
  * 
  * returns: return a valid selected rank
  */
-char user_play(struct player* target);
+char user_play(int connfd, struct player* target);
 
 #endif
