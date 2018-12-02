@@ -3,6 +3,7 @@
  */
 /* $begin echoservertmain */
 #include "csapp.h"
+#include "gofish.h"
 
 int playerCount = 0;
 

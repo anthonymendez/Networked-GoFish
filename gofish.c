@@ -2,21 +2,22 @@
 #include <time.h>
 #include "gofish.h"
 
-int main(int args, char* argv[]) {
+/*int main(int args, char* argv[]) {
     srand(time(NULL));
 
     do {
         game_start();
         do {
-            /* Play a round */
+            /* Play a round 
             if(game_loop())
-                break; /* If there is a winner, go to game_end */
+                break; /* If there is a winner, go to game_end
             current = next_player;
         } while(1);
     } while(game_end());
     fprintf(stdout, "Exiting\n");
     return 0;
 }
+*/
 
 /*
  * Function: game_start
