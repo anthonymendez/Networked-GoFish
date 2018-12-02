@@ -4,9 +4,11 @@
 /* $begin echoclientmain */
 #include "csapp.h"
 
+#define DO_NOT_PRINT "DO_NOT_PRINT"
+
 int main(int argc, char **argv) 
 {
-    int clientfd;
+    int clientfd, n;
     char *host, *port, buf[MAXLINE];
     rio_t rio;
 
@@ -20,10 +22,18 @@ int main(int argc, char **argv)
     clientfd = Open_clientfd(host, port);
     Rio_readinitb(&rio, clientfd);
 
-    while (Fgets(buf, MAXLINE, stdin) != NULL) {
-        Rio_writen(clientfd, buf, strlen(buf));
-        Rio_readlineb(&rio, buf, MAXLINE);
-        Fputs(buf, stdout);
+    while ((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) {
+        /* Check if we need to send a response */
+        if (strcmp(buf, DO_NOT_PRINT) == 0) {
+            /* Wait until user gives input */
+            if (Fgets(buf, MAXLINE, stdin) != NULL) {
+                Rio_writen(clientfd, buf, strlen(buf));
+            } else {
+                break;
+            }
+        } else {
+            Fputs(buf, stdout);
+        }
     }
     Close(clientfd); //line:netp:echoclient:close
     exit(0);

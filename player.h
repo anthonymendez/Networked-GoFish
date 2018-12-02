@@ -145,6 +145,6 @@ char computer_play(int connfd, struct player* target);
  * 
  * returns: return a valid selected rank
  */
-char user_play(int connfd, struct player* target);
+char user_play(int connfd, rio_t rio, struct player* target);
 
 #endif

@@ -45,7 +45,7 @@ void game_start(int connfd) {
  * 
  * Return: 1 if there is a winner, 0 otherwise
  */
-int game_loop(int connfd) {
+int game_loop(int connfd, rio_t rio) {
     sendStringToClient(connfd, "\n");
 
     /* Print hand and book statuses */
@@ -74,7 +74,7 @@ int game_loop(int connfd) {
     if(current->hand_size > 0) { /* Non-empty hand */
         /* Get rank guess input */
         if(current == &user) { /* User's turn */
-            r = user_play(connfd, current);
+            r = user_play(connfd, rio, current);
         } else { /* Computer's turn */
             r = computer_play(connfd, current);
         }
@@ -221,7 +221,7 @@ int game_loop(int connfd) {
  * 
  * Return: 1 to play again, 0 to exit
  */
-int game_end(int connfd) {
+int game_end(int connfd, rio_t rio) {
     struct player* other_player = (current == &user) ? &computer : &user;
     
     /* Count books of loser */
@@ -241,7 +241,7 @@ int game_end(int connfd) {
         free(buf);
     }
 
-    char yn[3] = "";
+    char yn[3];
     int tryAgain = 0;
     do {
         if(tryAgain) {
@@ -256,10 +256,8 @@ int game_end(int connfd) {
         free(buf);
         /* TODO: Replace with wait to listen from client */
         sendStringToClient(connfd, DO_NOT_PRINT);
-        scanf("%2s", yn);
+        Rio_readlineb(&rio, yn, 3);
         tryAgain = 1;
-
-        while(getchar() != '\n');
 
         if(yn[1] != '\0')
             continue;

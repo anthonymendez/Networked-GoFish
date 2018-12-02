@@ -29,7 +29,7 @@ void game_start(int connfd);
  * 
  * Return: 1 if there is a winner, 0 otherwise
  */
-int game_loop(int connfd);
+int game_loop(int connfd, rio_t rio);
 
 /*
  * Function: game_end
@@ -43,7 +43,7 @@ int game_loop(int connfd);
  * 
  * Return: 1 to play again, 0 to exit
  */
-int game_end(int connfd);
+int game_end(int connfd, rio_t rio);
 
 /*
  * Function: pR

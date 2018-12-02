@@ -2,8 +2,6 @@
  * echoservert.c - A concurrent echo server using threads
  */
 /* $begin echoservertmain */
-#include "csapp.h"
-#include "gofish.h"
 #include "server.h"
 
 void echo(int connfd) {
@@ -12,22 +10,20 @@ void echo(int connfd) {
     rio_t rio;
 
     Rio_readinitb(&rio, connfd);
-    /* Waits for message from client, then writes same message back to client */
-    while((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) {
-        printf("server received %d bytes\n", n);
-        sendStringToClient(connfd, buf);
-    }
 
     do {
+        printf("Game Starting\n");
         game_start(connfd);
         do {
+            printf("Looping\n");
             /* Play a round */
-            if (game_loop(connfd)) {
+            if (game_loop(connfd, rio)) {
+                printf("Winner!");
                 break;  /* If there is a winner, go to game_end */
             }
             current = next_player;
         } while(1);
-    } while(game_end(connfd));
+    } while(game_end(connfd, rio));
     Rio_writen(connfd, "Exiting\n", strlen(buf));
     printf("Exiting GoFish\n");
 }
@@ -76,5 +72,6 @@ void *thread(void *vargp) {
 }
 
 void sendStringToClient(int connfd, char *stringToClient) {
+    printf("%s", stringToClient);
     return Rio_writen(connfd, stringToClient, strlen(stringToClient));
 }

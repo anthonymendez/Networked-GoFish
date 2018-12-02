@@ -344,18 +344,18 @@ char computer_play(int connfd, struct player* target) {
  * 
  * returns: return a valid selected rank
  */
-char user_play(int connfd, struct player* target) {
+char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
         char *buf = malloc(100 * sizeof(char));
         sprintf(buf, "Player 1's turn, enter a Rank: ");
         sendStringToClient(connfd, buf);
         free(buf);
+        printf("Player must enter rank");
         /* TODO: Change to stdin to listening from client */
         sendStringToClient(connfd, DO_NOT_PRINT);
-        char buf2[4] = "";
-        scanf("%3s", buf2); /* If {Enter} is pressed before other input, this still blocks. I believe this is fine. */
-        while(getchar() != '\n'); /* Clear anything after the 3rd character from stdin */
+        char buf2[4];
+        Rio_readlineb(&rio, buf2, 4);
 
         /* Check for a "10" */
         if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0')
