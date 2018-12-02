@@ -4,6 +4,8 @@
 /* $begin echoservertmain */
 #include "csapp.h"
 
+int playerCount = 0;
+
 void *thread(void *vargp);
 
 void echo(int connfd) {
@@ -41,9 +43,14 @@ int main(int argc, char **argv) {
 /* Thread routine */
 void *thread(void *vargp) {
     int connfd = *((int *)vargp);
+    playerCount++;
+    printf("@Player%d joined the game\n", playerCount);
+    printf("Ready to start!\n");
     Pthread_detach(pthread_self()); //line:conc:echoservert:detach
     Free(vargp);                    //line:conc:echoservert:free
     echo(connfd);
+    printf("Player has left the game\n");
+    playerCount--;
     Close(connfd);
     return NULL;
 }
