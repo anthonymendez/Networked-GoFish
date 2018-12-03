@@ -347,8 +347,16 @@ char computer_play(int connfd, struct player* target) {
 char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
-        sendStringToClient(connfd, DO_NOT_PRINT);
-        sendStringToClient(connfd, "Player 1's turn, enter a Rank: ");
+        printf("\nUSERPLAY!\n");
+        char *buf = malloc(100 * sizeof(char));
+        printf("\nMallocedBuf\n");
+        strcat(buf, DO_NOT_PRINT);
+        printf("\nAddedDONOTPRINT\n");
+        strcat(buf, "Player 1's turn, enter a Rank: ");
+        printf("\nAdded Player's1TurnEnter\n");
+        sendStringToClient(connfd, buf);
+        printf("\nSent!\n");
+        free(buf);
         /* TODO: Change to stdin to listening from client */
         char *buf2 = calloc(3, sizeof(char));
         Rio_readlineb(&rio, buf2, 3);

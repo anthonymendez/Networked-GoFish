@@ -4,12 +4,12 @@
 /* $begin echoclientmain */
 #include "csapp.h"
 
-#define DO_NOT_PRINT "DO_NOT_PRINT\n"
+#define DO_NOT_PRINT "DO_NOT_PRINT"
 
 int main(int argc, char **argv) 
 {
     int clientfd, n;
-    char *host, *port, buf[MAXLINE];
+    char *host, *port, *buf;
     rio_t rio;
 
     if (argc != 3) {
@@ -18,15 +18,20 @@ int main(int argc, char **argv)
     }
     host = argv[1];
     port = argv[2];
+    buf = malloc(MAXLINE * sizeof(char));
 
     clientfd = Open_clientfd(host, port);
     Rio_readinitb(&rio, clientfd);
 
     while ((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) {
         /* Check if we need to send a response */
-        if (strstr(buf, DO_NOT_PRINT) == NULL)
-            printf("R:%s", buf);
-        if (strstr(buf, DO_NOT_PRINT) != NULL) {
+        if (strstr(buf, DO_NOT_PRINT) == NULL) {
+            printf("NOTFOUND: %s", buf);
+        } else {
+            // TODO: Why is it getting stuck here?
+            printf("DO_NOT_PRINT IS HERE\n");
+            printf("B:%s", buf);
+            printf("A:%s", buf + strlen(DO_NOT_PRINT));
             /* Wait until user gives input */
             if (Fgets(buf, MAXLINE, stdin) != NULL) {
                 Rio_writen(clientfd, buf, strlen(buf));
