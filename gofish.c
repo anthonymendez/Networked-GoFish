@@ -244,6 +244,7 @@ int game_end(int connfd, rio_t rio) {
     char yn[3];
     int tryAgain = 0;
     do {
+        sendStringToClient(connfd, DO_NOT_PRINT);
         if(tryAgain) {
             char *buf = malloc(100 * sizeof(char));
             sprintf(buf, "Error - must enter \"Y\" or \"N\"");
@@ -255,7 +256,6 @@ int game_end(int connfd, rio_t rio) {
         sendStringToClient(connfd, buf);
         free(buf);
         /* TODO: Replace with wait to listen from client */
-        sendStringToClient(connfd, DO_NOT_PRINT);
         Rio_readlineb(&rio, yn, 3);
         tryAgain = 1;
 

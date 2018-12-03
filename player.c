@@ -347,18 +347,18 @@ char computer_play(int connfd, struct player* target) {
 char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
+        sendStringToClient(connfd, DO_NOT_PRINT);
         sendStringToClient(connfd, "Player 1's turn, enter a Rank: ");
         /* TODO: Change to stdin to listening from client */
         char *buf2 = calloc(3, sizeof(char));
-        sendStringToClient(connfd, DO_NOT_PRINT);
         Rio_readlineb(&rio, buf2, 3);
 
         /* Check for a "10" */
-        if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0')
+        if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0') {
             rank = 'T';
-        else if(buf2[1] == '\0')
+        } else if(buf2[1] == '\n' || buf2[1] == '\0') {
             rank = buf2[0];
-        else { /* Invalid input length */
+        } else { /* Invalid input length */
             sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
             continue;
         }
@@ -366,7 +366,7 @@ char user_play(int connfd, rio_t rio, struct player* target) {
         /* If the selected rank is in the player's hand, return it */
         if(search(target, rank) && buf2[0] != 'T') /* Input 'T' improperly results in a successful search */
             break;
-
+        printf("\nDid not find %s in hand\n", buf2);
         sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
     }while(1);
 
