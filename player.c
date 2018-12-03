@@ -347,10 +347,10 @@ char computer_play(int connfd, struct player* target) {
 char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
-        sendStringToClient(connfd, DO_NOT_PRINT);
         sendStringToClient(connfd, "Player 1's turn, enter a Rank: ");
         /* TODO: Change to stdin to listening from client */
         char *buf2 = calloc(3, sizeof(char));
+        sendStringToClient(connfd, DO_NOT_PRINT);
         Rio_readlineb(&rio, buf2, 3);
 
         /* Check for a "10" */
