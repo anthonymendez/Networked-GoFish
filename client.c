@@ -4,7 +4,7 @@
 /* $begin echoclientmain */
 #include "csapp.h"
 
-#define DO_NOT_PRINT "DO_NOT_PRINT"
+#define DO_NOT_PRINT "DO_NOT_PRINT\n"
 
 int main(int argc, char **argv) 
 {
@@ -24,6 +24,8 @@ int main(int argc, char **argv)
 
     while ((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) {
         /* Check if we need to send a response */
+        if (strcmp(buf, DO_NOT_PRINT) != 0)
+            printf("%s", buf);
         if (strcmp(buf, DO_NOT_PRINT) == 0) {
             /* Wait until user gives input */
             if (Fgets(buf, MAXLINE, stdin) != NULL) {
@@ -31,8 +33,6 @@ int main(int argc, char **argv)
             } else {
                 break;
             }
-        } else {
-            Fputs(buf, stdout);
         }
     }
     Close(clientfd); //line:netp:echoclient:close

@@ -347,15 +347,11 @@ char computer_play(int connfd, struct player* target) {
 char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
-        char *buf = malloc(100 * sizeof(char));
-        sprintf(buf, "Player 1's turn, enter a Rank: ");
-        sendStringToClient(connfd, buf);
-        free(buf);
-        printf("Player must enter rank");
-        /* TODO: Change to stdin to listening from client */
         sendStringToClient(connfd, DO_NOT_PRINT);
-        char buf2[4];
-        Rio_readlineb(&rio, buf2, 4);
+        sendStringToClient(connfd, "Player 1's turn, enter a Rank: ");
+        /* TODO: Change to stdin to listening from client */
+        char *buf2 = calloc(3, sizeof(char));
+        Rio_readlineb(&rio, buf2, 3);
 
         /* Check for a "10" */
         if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0')
@@ -363,10 +359,7 @@ char user_play(int connfd, rio_t rio, struct player* target) {
         else if(buf2[1] == '\0')
             rank = buf2[0];
         else { /* Invalid input length */
-            buf = malloc(100 * sizeof(char));
-            sprintf(buf, "Error - must have at least one card from rank to play\n");
-            sendStringToClient(connfd, buf);
-            free(buf);
+            sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
             continue;
         }
 
@@ -374,10 +367,7 @@ char user_play(int connfd, rio_t rio, struct player* target) {
         if(search(target, rank) && buf2[0] != 'T') /* Input 'T' improperly results in a successful search */
             break;
 
-        buf = malloc(100 * sizeof(char));
-        sprintf(buf, "Error - must have at least one card from rank to play\n");
-        sendStringToClient(connfd, buf);
-        free(buf);
+        sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
     }while(1);
 
     return rank;

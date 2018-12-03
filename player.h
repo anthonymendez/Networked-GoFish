@@ -5,7 +5,7 @@
 #include "card.h"
 #include "server.h"
 
-#define DO_NOT_PRINT "DO_NOT_PRINT"
+#define DO_NOT_PRINT "DO_NOT_PRINT\n"
 
 /*
  * Structure: player

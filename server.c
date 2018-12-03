@@ -72,6 +72,7 @@ void *thread(void *vargp) {
 }
 
 void sendStringToClient(int connfd, char *stringToClient) {
+    /* TODO: Remove when finished */
     printf("%s", stringToClient);
     return Rio_writen(connfd, stringToClient, strlen(stringToClient));
 }
