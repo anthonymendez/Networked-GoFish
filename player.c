@@ -361,10 +361,15 @@ char user_play(int connfd, rio_t rio, struct player* target) {
             buf2[2] = '\0';
         }
 
+        for(int i = 1; i < 3; i++) {
+            if (buf2[i] == '\n') {
+                buf2[i] = '\0';
+            }
+        }
+
 		printf("[debug] from client: ---%s---\n", buf2);
 
 		/* Check for a "10" */
-		// TODO: Will this if work with trailing newline??? I tested and it seems to work just fine somehow
         if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0') {
             rank = 'T';
         } else if(buf2[1] == '\n' || buf2[1] == '\0') {
