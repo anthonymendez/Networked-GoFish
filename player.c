@@ -347,11 +347,8 @@ char computer_play(int connfd, struct player* target) {
 char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
-        printf("\nUSERPLAY!\n");
         sendStringToClient(connfd, "Player 1's turn, enter a Rank: ");
 		sendStringToClient(connfd, DO_NOT_PRINT);
-        printf("\nSent!\n");
-        /* TODO: Change to stdin to listening from client */
         char *buf2 = calloc(MAXLINE, sizeof(char));
         Rio_readlineb(&rio, buf2, MAXLINE);
 
@@ -367,9 +364,6 @@ char user_play(int connfd, rio_t rio, struct player* target) {
             }
         }
 
-		printf("[debug] from client: ---%s---\n", buf2);
-
-
         if (strlen(buf2) > 3) {
             sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
             continue;
@@ -383,11 +377,9 @@ char user_play(int connfd, rio_t rio, struct player* target) {
             continue;
         }
 
-		// TODO: Something is very wrong here
         /* If the selected rank is in the player's hand, return it */
         if(search(target, rank) && buf2[0] != 'T') /* Input 'T' improperly results in a successful search */
             break;
-        printf("\nDid not find %s in hand\n", buf2); // TODO: trim trailing newline (except for 10 case, make 2 cases)
         sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
     }while(1);
 

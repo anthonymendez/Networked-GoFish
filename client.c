@@ -23,7 +23,6 @@ int main(int argc, char **argv)
     clientfd = Open_clientfd(host, port);
     Rio_readinitb(&rio, clientfd);
 
-	// TODO: Make buf a single character? If this implementation is final (readnb instead of readlineb)
     while ((n = Rio_readnb(&rio, buf, 1)) != 0) { // Read one byte/char
         /* Check if we need to send a response */
         if (buf[0] != '\xEA') {

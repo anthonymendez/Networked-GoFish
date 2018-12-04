@@ -12,20 +12,16 @@ void echo(int connfd) {
     Rio_readinitb(&rio, connfd);
 
     do {
-        printf("Game Starting\n");
         game_start(connfd);
         do {
-            printf("Looping\n");
             /* Play a round */
             if (game_loop(connfd, rio)) {
-                printf("Winner!");
                 break;  /* If there is a winner, go to game_end */
             }
             current = next_player;
         } while(1);
     } while(game_end(connfd, rio));
     Rio_writen(connfd, "Exiting\n", strlen(buf));
-    printf("Exiting GoFish\n");
 }
 
 int main(int argc, char **argv) {
@@ -72,7 +68,5 @@ void *thread(void *vargp) {
 }
 
 void sendStringToClient(int connfd, char *stringToClient) {
-    /* TODO: Remove when finished */
-    printf("%s", stringToClient);
     Rio_writen(connfd, stringToClient, strlen(stringToClient));
 }
