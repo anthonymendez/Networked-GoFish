@@ -355,6 +355,12 @@ char user_play(int connfd, rio_t rio, struct player* target) {
         char *buf2 = calloc(3, sizeof(char));
         Rio_readlineb(&rio, buf2, 3);
 
+        if (buf2[1] == '\n') {
+            buf2[1] = '\0';
+        } else if (buf2[2] == '\n') {
+            buf2[2] = '\0';
+        }
+
 		printf("[debug] from client: ---%s---\n", buf2);
 
 		/* Check for a "10" */
