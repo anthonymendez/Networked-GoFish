@@ -348,20 +348,17 @@ char user_play(int connfd, rio_t rio, struct player* target) {
     char rank;
     do {
         printf("\nUSERPLAY!\n");
-        char *buf = malloc(100 * sizeof(char));
-        printf("\nMallocedBuf\n");
-        strcat(buf, DO_NOT_PRINT);
-        printf("\nAddedDONOTPRINT\n");
-        strcat(buf, "Player 1's turn, enter a Rank: ");
-        printf("\nAdded Player's1TurnEnter\n");
-        sendStringToClient(connfd, buf);
+        sendStringToClient(connfd, "Player 1's turn, enter a Rank: ");
+		sendStringToClient(connfd, DO_NOT_PRINT);
         printf("\nSent!\n");
-        free(buf);
         /* TODO: Change to stdin to listening from client */
         char *buf2 = calloc(3, sizeof(char));
         Rio_readlineb(&rio, buf2, 3);
 
-        /* Check for a "10" */
+		printf("[debug] from client: ---%s---\n", buf2);
+
+		/* Check for a "10" */
+		// TODO: Will this if work with trailing newline??? I tested and it seems to work just fine somehow
         if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0') {
             rank = 'T';
         } else if(buf2[1] == '\n' || buf2[1] == '\0') {
@@ -371,10 +368,11 @@ char user_play(int connfd, rio_t rio, struct player* target) {
             continue;
         }
 
+		// TODO: Something is very wrong here
         /* If the selected rank is in the player's hand, return it */
         if(search(target, rank) && buf2[0] != 'T') /* Input 'T' improperly results in a successful search */
             break;
-        printf("\nDid not find %s in hand\n", buf2);
+        printf("\nDid not find %s in hand\n", buf2); // TODO: trim trailing newline (except for 10 case, make 2 cases)
         sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
     }while(1);
 

@@ -4,7 +4,7 @@
 /* $begin echoclientmain */
 #include "csapp.h"
 
-#define DO_NOT_PRINT "DO_NOT_PRINT"
+#define DO_NOT_PRINT "\xEA" //Capitol omega, should never be printed
 
 int main(int argc, char **argv) 
 {
@@ -23,15 +23,12 @@ int main(int argc, char **argv)
     clientfd = Open_clientfd(host, port);
     Rio_readinitb(&rio, clientfd);
 
-    while ((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) {
+	// TODO: Make buf a single character? If this implementation is final (readnb instead of readlineb)
+    while ((n = Rio_readnb(&rio, buf, 1)) != 0) { // Read one byte/char
         /* Check if we need to send a response */
-        if (strstr(buf, DO_NOT_PRINT) == NULL) {
-            printf("NOTFOUND: %s", buf);
+        if (buf[0] != '\xEA') {
+            printf("%c", buf[0]); //Send character to stdout
         } else {
-            // TODO: Why is it getting stuck here?
-            printf("DO_NOT_PRINT IS HERE\n");
-            printf("B:%s", buf);
-            printf("A:%s", buf + strlen(DO_NOT_PRINT));
             /* Wait until user gives input */
             if (Fgets(buf, MAXLINE, stdin) != NULL) {
                 Rio_writen(clientfd, buf, strlen(buf));
