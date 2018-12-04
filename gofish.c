@@ -252,7 +252,6 @@ int game_end(int connfd, rio_t rio) {
         strcat(buf, DO_NOT_PRINT);
         sendStringToClient(connfd, buf);
         free(buf);
-        /* TODO: Replace with wait to listen from client */
         Rio_readlineb(&rio, yn, MAXLINE);
         tryAgain = 1;
 
