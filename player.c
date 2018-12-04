@@ -352,8 +352,8 @@ char user_play(int connfd, rio_t rio, struct player* target) {
 		sendStringToClient(connfd, DO_NOT_PRINT);
         printf("\nSent!\n");
         /* TODO: Change to stdin to listening from client */
-        char *buf2 = calloc(3, sizeof(char));
-        Rio_readlineb(&rio, buf2, 3);
+        char *buf2 = calloc(MAXLINE, sizeof(char));
+        Rio_readlineb(&rio, buf2, MAXLINE);
 
         if (buf2[1] == '\n') {
             buf2[1] = '\0';
@@ -361,7 +361,7 @@ char user_play(int connfd, rio_t rio, struct player* target) {
             buf2[2] = '\0';
         }
 
-        for(int i = 1; i < 3; i++) {
+        for(int i = 1; i < MAXLINE; i++) {
             if (buf2[i] == '\n') {
                 buf2[i] = '\0';
             }
@@ -369,8 +369,12 @@ char user_play(int connfd, rio_t rio, struct player* target) {
 
 		printf("[debug] from client: ---%s---\n", buf2);
 
+
+        if (strlen(buf2) > 3) {
+            sendStringToClient(connfd, "Error - must have at least one card from rank to play\n");
+            continue;
 		/* Check for a "10" */
-        if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0') {
+        } else if(buf2[0] == '1' && buf2[1] == '0' && buf2[2] == '\0') {
             rank = 'T';
         } else if(buf2[1] == '\n' || buf2[1] == '\0') {
             rank = buf2[0];

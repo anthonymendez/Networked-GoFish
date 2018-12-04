@@ -244,16 +244,16 @@ int game_end(int connfd, rio_t rio) {
     char yn[3];
     int tryAgain = 0;
     do {
-        char *buf = malloc(100 * sizeof(char));
+        char *buf = calloc(MAXLINE, sizeof(char));
         if(tryAgain) {
             strcat(buf, "Error - must enter \"Y\" or \"N\"");
         }
         strcat(buf, "\nDo you want to play again [Y/N]: ");
+        strcat(buf, DO_NOT_PRINT);
         sendStringToClient(connfd, buf);
-        sendStringToClient(connfd, DO_NOT_PRINT);
         free(buf);
         /* TODO: Replace with wait to listen from client */
-        Rio_readlineb(&rio, yn, 3);
+        Rio_readlineb(&rio, yn, MAXLINE);
         tryAgain = 1;
 
         if(yn[1] != '\n' && yn[1] != '\0')
