@@ -304,31 +304,23 @@ const char* pR(char r) {
  * target: the player to print the hand of
  */
 void print_hand(int connfd, struct player* target) {
+    char *buf = calloc(MAXLINE, sizeof(char));
+    struct hand *h;
     if(target->hand_size == 0) {
-        char *buf = malloc(100 * sizeof(char));
-        sprintf(buf, "\n");
-        sendStringToClient(connfd, buf);
-        free(buf);
-        return;
+        strcat(buf, "\n");
+    } else {
+        h = target->card_list;
+        sprintf(buf, "%s%s%c", buf, pR(h->top.rank), h->top.suit);
     }
 
-    struct hand* h = target->card_list;
-    char *buf = malloc(100 * sizeof(char));
-    sprintf(buf, "%s%c", pR(h->top.rank), h->top.suit);
-    sendStringToClient(connfd, buf);
-    free(buf);
-
-    int i;
-    for(i = 1; i < target->hand_size; i++) {
+    for(int i = 1; i < target->hand_size; i++) {
         h = h->next;
-        buf = malloc(100 * sizeof(char));
-        sprintf(buf, "%s%c", pR(h->top.rank), h->top.suit);
-        sendStringToClient(connfd, buf);
-        free(buf);
+        sprintf(buf, "%s %s%c", buf, pR(h->top.rank), h->top.suit);
+        if (i == target->hand_size-1) {
+            strcat(buf, "\n");
+        }
     }
 
-    buf = malloc(100 * sizeof(char));
-    sprintf(buf, "\n");
     sendStringToClient(connfd, buf);
     free(buf);
 }
