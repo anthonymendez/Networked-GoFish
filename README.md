@@ -1,9 +1,10 @@
 # Networked GoFish
-## Assignment 5
+## Fall 2018
+## ECE373 Assignment 5
 
-## Authors
-* Anthony Mendez - anthonymende@umass.edu
-* Joshua Howell - jhowell@umass.edu
+## Developers
+* [Anthony Mendez](https://github.com/anthonymendez)
+* [Joshua Howell](https://github.com/Parzival6)
 
 ## Summary
 The GoFish code interacts with the server to keep the player updated, and handle input coming from the player. The flow of the code is largly the same as in the original GoFish assignment. There is added overhead to establish the network connection and transmit data during the game. Additionally, the server blocks while waiting for input from the network instead of the terminal. The client opens the connection to the server, prints data received from the server, and sends user input when prompted. The server drives the GoFish code by opening the connection to the client, sending game updates to the client, and passing data from the client to the GoFish code.
